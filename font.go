@@ -97,9 +97,6 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 	//set text color
 	gl.Uniform4f(gl.GetUniformLocation(f.program, gl.Str("textColor\x00")), f.color.r, f.color.g, f.color.b, f.color.a)
 
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindVertexArray(f.vao)
-
 	var coords []point
 
 	n := 0
@@ -125,17 +122,17 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 		h := float32(ch.height) * scale
 
 		//set quad positions
-		//var x1 = xpos
+		var x1 = xpos
 		var x2 = xpos + w
-		//var y1 = ypos
+		var y1 = ypos
 		var y2 = ypos + h
 
-		coords = append(coords, point{x2, -y2, float32(ch.x), 0})
-		coords = append(coords, point{x2 + w, -y2, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), 0})
-		coords = append(coords, point{x2, -y2 - h, float32(ch.x), float32(ch.height) / float32(f.atlasHeight)})
-		coords = append(coords, point{x2 + w, -y2, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), 0})
-		coords = append(coords, point{x2, -y2 - h, float32(ch.x), float32(ch.height) / float32(f.atlasHeight)})
-		coords = append(coords, point{x2 + w, -y2 - h, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x1, y1, float32(ch.x), 0})
+		coords = append(coords, point{x2, y1, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), 0})
+		coords = append(coords, point{x1, y2, float32(ch.x), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x2, y1, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), 0})
+		coords = append(coords, point{x1, y2, float32(ch.x), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x2, y2, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
@@ -143,16 +140,13 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 		n += 6
 	}
 
-	// Render glyph texture over quad
+	gl.BindVertexArray(f.vao)
+	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, f.textureID)
-	// Update content of VBO memory
 	gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
-
 	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*4, gl.Ptr(coords), gl.DYNAMIC_DRAW)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(n))
 
-	//clear opengl textures and programs
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindVertexArray(0)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	gl.UseProgram(0)
