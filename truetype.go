@@ -15,12 +15,19 @@ import (
 )
 
 type character struct {
-	textureID uint32 // ID handle of the glyph texture
-	width     int    //glyph width
-	height    int    //glyph height
-	advance   int    //glyph advance
-	bearingH  int    //glyph bearing horizontal
-	bearingV  int    //glyph bearing vertical
+	x, y     int
+	width    int //glyph width
+	height   int //glyph height
+	advance  int //glyph advance
+	bearingH int //glyph bearing horizontal
+	bearingV int //glyph bearing vertical
+}
+
+func max(a, b int32) int32 {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 //LoadTrueTypeFont builds a set of textures based on a ttf files gylphs
@@ -48,6 +55,27 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		DPI:     72,
 		Hinting: font.HintingFull,
 	})
+
+	for ch := low; ch <= high; ch++ {
+		gBnd, _, ok := ttfFace.GlyphBounds(ch)
+		if ok != true {
+			return nil, fmt.Errorf("ttf face glyphBounds error")
+		}
+
+		gh := int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
+		gw := int32((gBnd.Max.X - gBnd.Min.X) >> 6)
+
+		f.atlasWidth += gw
+		f.atlasHeight = max(f.atlasHeight, gh)
+	}
+
+	//create image to draw glyph
+	fg, bg := image.White, image.Black
+	rect := image.Rect(0, 0, int(f.atlasWidth), int(f.atlasHeight))
+	rgba := image.NewRGBA(rect)
+	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
+
+	x := 0
 
 	//make each gylph
 	for ch := low; ch <= high; ch++ {
@@ -85,18 +113,15 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		char.bearingV = gdescent
 		char.bearingH = (int(gBnd.Min.X) >> 6)
 
-		//create image to draw glyph
-		fg, bg := image.White, image.Black
-		rect := image.Rect(0, 0, int(gw), int(gh))
-		rgba := image.NewRGBA(rect)
-		draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
+		clip := image.Rect(x, 0, int(gw), int(gh))
+		x += int(gw)
 
 		//create a freetype context for drawing
 		c := freetype.NewContext()
 		c.SetDPI(72)
 		c.SetFont(ttf)
 		c.SetFontSize(float64(scale))
-		c.SetClip(rgba.Bounds())
+		c.SetClip(clip)
 		c.SetDst(rgba)
 		c.SetSrc(fg)
 		c.SetHinting(font.HintingFull)
@@ -112,23 +137,22 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 			return nil, err
 		}
 
-		// Generate texture
-		var texture uint32
-		gl.GenTextures(1, &texture)
-		gl.BindTexture(gl.TEXTURE_2D, texture)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Dx()), int32(rgba.Rect.Dy()), 0,
-			gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
-
-		char.textureID = texture
-
 		//add char to fontChar list
 		f.fontChar = append(f.fontChar, char)
-
 	}
+
+	// Generate texture
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Dx()), int32(rgba.Rect.Dy()), 0,
+		gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
+
+	f.textureID = texture
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 
