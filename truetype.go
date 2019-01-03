@@ -49,7 +49,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 	f.program = program            //set shader program
 	f.SetColor(1.0, 1.0, 1.0, 1.0) //set default white
 
-	//create new face to measure glyph dimensions
+	//create new face
 	ttfFace := truetype.NewFace(ttf, &truetype.Options{
 		Size:    float64(scale),
 		DPI:     72,
@@ -113,8 +113,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		char.bearingV = gdescent
 		char.bearingH = (int(gBnd.Min.X) >> 6)
 
-		clip := image.Rect(x, 0, int(gw), int(gh))
-		x += int(gw)
+		clip := image.Rect(x, 0, x+int(gw), int(gh))
 
 		//create a freetype context for drawing
 		c := freetype.NewContext()
@@ -127,9 +126,11 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		c.SetHinting(font.HintingFull)
 
 		//set the glyph dot
-		px := 0 - (int(gBnd.Min.X) >> 6)
+		px := 0 - (int(gBnd.Min.X) >> 6) + x
 		py := (gAscent)
 		pt := freetype.Pt(px, py)
+
+		x += int(gw)
 
 		// Draw the text from mask to image
 		_, err = c.DrawString(string(ch), pt)
