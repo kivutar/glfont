@@ -23,7 +23,7 @@ type character struct {
 	bearingV int //glyph bearing vertical
 }
 
-func max(a, b int32) int32 {
+func max(a, b float32) float32 {
 	if a > b {
 		return a
 	}
@@ -65,8 +65,8 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		gh := int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
 		gw := int32((gBnd.Max.X - gBnd.Min.X) >> 6)
 
-		f.atlasWidth += gw
-		f.atlasHeight = max(f.atlasHeight, gh)
+		f.atlasWidth += float32(gw)
+		f.atlasHeight = max(f.atlasHeight, float32(gh))
 	}
 
 	//create image to draw glyph
@@ -144,17 +144,14 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 	}
 
 	// Generate texture
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.BindTexture(gl.TEXTURE_2D, texture)
+	gl.GenTextures(1, &f.textureID)
+	gl.BindTexture(gl.TEXTURE_2D, f.textureID)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Dx()), int32(rgba.Rect.Dy()), 0,
 		gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
-
-	f.textureID = texture
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 

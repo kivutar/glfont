@@ -25,8 +25,8 @@ type Font struct {
 	program     uint32
 	textureID   uint32 // Holds the glyph texture id.
 	color       color
-	atlasWidth  int32
-	atlasHeight int32
+	atlasWidth  float32
+	atlasHeight float32
 }
 
 type color struct {
@@ -125,12 +125,12 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 		var y1 = ypos
 		var y2 = ypos + h
 
-		coords = append(coords, point{x1, y1, float32(ch.x) / float32(f.atlasWidth), 0})
-		coords = append(coords, point{x2, y1, float32(ch.x)/float32(f.atlasWidth) + float32(ch.width)/float32(f.atlasWidth), 0})
-		coords = append(coords, point{x1, y2, float32(ch.x) / float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
-		coords = append(coords, point{x2, y1, float32(ch.x)/float32(f.atlasWidth) + float32(ch.width)/float32(f.atlasWidth), 0})
-		coords = append(coords, point{x1, y2, float32(ch.x) / float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
-		coords = append(coords, point{x2, y2, float32(ch.x)/float32(f.atlasWidth) + float32(ch.width)/float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x1, y1, float32(ch.x) / f.atlasWidth, 0})
+		coords = append(coords, point{x2, y1, float32(ch.x)/f.atlasWidth + float32(ch.width)/f.atlasWidth, 0})
+		coords = append(coords, point{x1, y2, float32(ch.x) / f.atlasWidth, float32(ch.height) / f.atlasHeight})
+		coords = append(coords, point{x2, y1, float32(ch.x)/f.atlasWidth + float32(ch.width)/f.atlasWidth, 0})
+		coords = append(coords, point{x1, y2, float32(ch.x) / f.atlasWidth, float32(ch.height) / f.atlasHeight})
+		coords = append(coords, point{x2, y2, float32(ch.x)/f.atlasWidth + float32(ch.width)/f.atlasWidth, float32(ch.height) / f.atlasHeight})
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
@@ -142,7 +142,6 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 	gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*16, gl.Ptr(coords), gl.DYNAMIC_DRAW)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(coords)))
-
 	gl.BindVertexArray(0)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	gl.UseProgram(0)
