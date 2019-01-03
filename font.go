@@ -144,7 +144,7 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, f.textureID)
 	gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*4, gl.Ptr(coords), gl.DYNAMIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*4*n, gl.Ptr(coords), gl.DYNAMIC_DRAW)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(n))
 
 	gl.BindVertexArray(0)
