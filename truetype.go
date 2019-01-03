@@ -107,6 +107,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		gdescent := int(gBnd.Max.Y) >> 6
 
 		//set w,h and adv, bearing V and bearing H in char
+		char.x = x
 		char.width = int(gw)
 		char.height = int(gh)
 		char.advance = int(gAdv)

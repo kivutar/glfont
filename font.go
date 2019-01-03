@@ -101,7 +101,6 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 
 	// Iterate through all characters in string
 	for i := range indices {
-
 		//get rune
 		runeIndex := indices[i]
 
@@ -126,12 +125,12 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 		var y1 = ypos
 		var y2 = ypos + h
 
-		coords = append(coords, point{x1, y1, float32(ch.x), 0})
-		coords = append(coords, point{x2, y1, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), 0})
-		coords = append(coords, point{x1, y2, float32(ch.x), float32(ch.height) / float32(f.atlasHeight)})
-		coords = append(coords, point{x2, y1, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), 0})
-		coords = append(coords, point{x1, y2, float32(ch.x), float32(ch.height) / float32(f.atlasHeight)})
-		coords = append(coords, point{x2, y2, float32(ch.x) + float32(ch.width)/float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x1, y1, float32(ch.x) / float32(f.atlasWidth), 0})
+		coords = append(coords, point{x2, y1, float32(ch.x)/float32(f.atlasWidth) + float32(ch.width)/float32(f.atlasWidth), 0})
+		coords = append(coords, point{x1, y2, float32(ch.x) / float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x2, y1, float32(ch.x)/float32(f.atlasWidth) + float32(ch.width)/float32(f.atlasWidth), 0})
+		coords = append(coords, point{x1, y2, float32(ch.x) / float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
+		coords = append(coords, point{x2, y2, float32(ch.x)/float32(f.atlasWidth) + float32(ch.width)/float32(f.atlasWidth), float32(ch.height) / float32(f.atlasHeight)})
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
