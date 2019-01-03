@@ -99,7 +99,6 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 
 	var coords []point
 
-	n := 0
 	// Iterate through all characters in string
 	for i := range indices {
 
@@ -136,16 +135,14 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
-
-		n += 6
 	}
 
 	gl.BindVertexArray(f.vao)
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, f.textureID)
 	gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*4*n, gl.Ptr(coords), gl.DYNAMIC_DRAW)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(n))
+	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*16, gl.Ptr(coords), gl.DYNAMIC_DRAW)
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(coords)))
 
 	gl.BindVertexArray(0)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
