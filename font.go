@@ -102,7 +102,7 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 
 	var coords []point
 
-	var n int32
+	n := 0
 	// Iterate through all characters in string
 	for i := range indices {
 
@@ -139,6 +139,8 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+
+		n += 6
 	}
 
 	// Render glyph texture over quad
@@ -147,7 +149,7 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 	gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
 
 	gl.BufferData(gl.ARRAY_BUFFER, len(coords)*4, gl.Ptr(coords), gl.DYNAMIC_DRAW)
-	gl.DrawArrays(gl.TRIANGLES, 0, n)
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(n))
 
 	//clear opengl textures and programs
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
