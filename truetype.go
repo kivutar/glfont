@@ -146,6 +146,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 	// Generate texture
 	gl.GenTextures(1, &f.textureID)
 	gl.BindTexture(gl.TEXTURE_2D, f.textureID)
+	gl.PixelStorei(gl.UNPACK_ALIGNMENT, 1)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
