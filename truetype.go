@@ -56,17 +56,16 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		Hinting: font.HintingFull,
 	})
 
+	var lineHeight float32
+	f.atlasWidth = 1024
+	f.atlasHeight = 1024
 	for ch := low; ch <= high; ch++ {
 		gBnd, _, ok := ttfFace.GlyphBounds(ch)
 		if ok != true {
 			return nil, fmt.Errorf("ttf face glyphBounds error")
 		}
-
 		gh := int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
-		gw := int32((gBnd.Max.X - gBnd.Min.X) >> 6)
-
-		f.atlasWidth += float32(gw) + 1
-		f.atlasHeight = max(f.atlasHeight, float32(gh))
+		lineHeight = max(lineHeight, float32(gh))
 	}
 
 	//create image to draw glyph
@@ -76,6 +75,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
 
 	x := 0
+	y := 0
 
 	//make each gylph
 	for ch := low; ch <= high; ch++ {
@@ -108,13 +108,14 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 
 		//set w,h and adv, bearing V and bearing H in char
 		char.x = x
+		char.y = y
 		char.width = int(gw)
 		char.height = int(gh)
 		char.advance = int(gAdv)
 		char.bearingV = gdescent
 		char.bearingH = (int(gBnd.Min.X) >> 6)
 
-		clip := image.Rect(x, 0, x+int(gw), int(gh))
+		clip := image.Rect(x, y, x+int(gw), y+int(gh))
 
 		//create a freetype context for drawing
 		c := freetype.NewContext()
@@ -128,10 +129,14 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 
 		//set the glyph dot
 		px := 0 - (int(gBnd.Min.X) >> 6) + x
-		py := (gAscent)
+		py := (gAscent) + y
 		pt := freetype.Pt(px, py)
 
 		x += int(gw) + 1
+		if x + int(gw) + 1 > int(f.atlasWidth) {
+			x = 0
+			y += int(lineHeight) + 1
+		}
 
 		// Draw the text from mask to image
 		_, err = c.DrawString(string(ch), pt)
