@@ -65,7 +65,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		gh := int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
 		gw := int32((gBnd.Max.X - gBnd.Min.X) >> 6)
 
-		f.atlasWidth += float32(gw)
+		f.atlasWidth += float32(gw) + 1
 		f.atlasHeight = max(f.atlasHeight, float32(gh))
 	}
 
@@ -131,7 +131,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale int32, low, high rune, 
 		py := (gAscent)
 		pt := freetype.Pt(px, py)
 
-		x += int(gw)
+		x += int(gw) + 1
 
 		// Draw the text from mask to image
 		_, err = c.DrawString(string(ch), pt)
